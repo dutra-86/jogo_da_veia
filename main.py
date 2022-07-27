@@ -19,6 +19,11 @@ matrix=[[0,0,0],[0,0,0],[0,0,0]]
 def fonte(size):
     return pygame.font.Font("assets/8-BIT WONDER.TTF", size)
 
+def max_index_2(n):
+    if n == 3: return 0
+    elif n == 4: return 1
+    else: return n
+
 def pop_up_unavailable():
     pont = True
     while pont:
@@ -127,6 +132,96 @@ def game_screen():
                 win.blit(x_image,(i*200,j*200))
     pygame.display.update()
 
+def ai_turn():
+    if player_turn == False:
+        #first turn
+        if rodada == 0:
+            select(1,1,2)
+            return 0
+        if rodada == 1:
+            if matrix[0][0] == 1:
+                select(2,2,2)
+                return 0
+            if matrix[2][2] == 1:
+                select(0,0,2)
+                return 0
+            if matrix[2][0] == 1:
+                select(0,2,2)
+                return 0
+            if matrix[0][2] == 1:
+                select(2,0,2)
+                return 0
+
+            if matrix[1][0] == 1 or matrix[0][1] == 1 or matrix[2][1] == 1 or matrix[1][2] == 1:
+                select(1,1,2)
+                return 0
+
+            if matrix[1][1] == 1:
+                select(randint(0,1)*2,randint(0,1)*2,2)
+                return 0
+            
+        if rodada > 1:
+
+            #detectar possiveis jogadas vitoriosas
+            for i in range (3):
+                for j in range (3):
+                    if matrix[i][j] == 2:
+                        if matrix[max_index_2(i+1)][max_index_2(j)] == 2 and matrix[max_index_2(i+2)][max_index_2(j)] == 0:
+                            select(max_index_2(i+2),max_index_2(j),2)
+                            return 0
+                        if matrix[max_index_2(i-1)][max_index_2(j)] == 2 and matrix[max_index_2(i-2)][max_index_2(j)] == 0:
+                            select(max_index_2(i-2),max_index_2(j),2)
+                            return 0
+                        if matrix[max_index_2(i)][max_index_2(j+1)] == 2 and matrix[max_index_2(i)][max_index_2(j+2)] == 0:
+                            select(max_index_2(i),max_index_2(j+2),2)
+                            return 0
+                        if matrix[max_index_2(i)][max_index_2(j-1)] == 2 and matrix[max_index_2(i)][max_index_2(j-2)] == 0:
+                            select(max_index_2(i),max_index_2(j-2),2)
+                            return 0
+
+            if matrix[1][1] == 0 and ((matrix[0][0] == 2 and matrix[2][2] == 2) or (matrix[2][0] == 2 and matrix[0][2] == 2)):
+                select(1,1,2)
+                return 0
+            for i in range(2):
+                for j in range(2):
+                    if matrix[1][1] == 2 and matrix[2*i][2*j] == 2 and matrix[2-(2*i)][2-(2*j)] == 0:
+                        select(2-(2*i),2-(2*j),2)
+                        return 0
+
+            #impedir vitorias do usuario
+            for i in range (3):
+                for j in range (3):
+                    if matrix[i][j] == 1:
+                        if matrix[max_index_2(i+1)][max_index_2(j)] == 1 and matrix[max_index_2(i+2)][max_index_2(j)] == 0:
+                            select(max_index_2(i+2),max_index_2(j),2)
+                            return 0
+                        if matrix[max_index_2(i-1)][max_index_2(j)] == 1 and matrix[max_index_2(i-2)][max_index_2(j)] == 0:
+                            select(max_index_2(i-2),max_index_2(j),2)
+                            return 0
+                        if matrix[max_index_2(i)][max_index_2(j+1)] == 1 and matrix[max_index_2(i)][max_index_2(j+2)] == 0:
+                            select(max_index_2(i),max_index_2(j+2),2)
+                            return 0
+                        if matrix[max_index_2(i)][max_index_2(j-1)] == 1 and matrix[max_index_2(i)][max_index_2(j-2)] == 0:
+                            select(max_index_2(i),max_index_2(j-2),2)
+                            return 0
+
+            if matrix[1][1] == 0 and ((matrix[0][0] == 1 and matrix[2][2] == 1) or (matrix[2][0] == 1 and matrix[0][2] == 1)):
+                select(1,1,2)
+                return 0
+            for i in range(2):
+                for j in range(2):
+                    if matrix[1][1] == 1 and matrix[2*i][2*j] == 1 and matrix[2-(2*i)][2-(2*j)] == 0:
+                        select(2-(2*i),2-(2*j),2)
+                        return 0
+
+            #caso nenhuma das funcoes acima retorne uma possivel jogada, a ia joga aleatoriamente
+            while True:
+                a = randint(0,2)
+                b = randint(0,2)
+                if matrix[a][b] == 0:
+                    select(a,b,2)
+                    return 0
+
 def game():
     global rodada
     global player_turn
@@ -146,35 +241,7 @@ def game():
 
         game_screen()
         detect_winner()
-
-        #artifical inteligence
-        #if gamemode == hard:
-        if rodada == 0 and player_turn == False:
-            select(1,1,2)
-        if rodada == 1 and player_turn == False:
-            if matrix[0][0] == 1: select(2,2,2)
-            if matrix[2][2] == 1: select(0,0,2)
-            if matrix[2][0] == 1: select(0,2,2)
-            if matrix[0][2] == 1: select(2,0,2)
-
-            if matrix[1][0] == 1 or matrix[0][1] == 1 or matrix[2][1] == 1 or matrix[1][2] == 1: select(1,1,2)
-
-            if matrix[1][1] == 1: select(randint(0,1)*2,randint(0,1)*2,2)
-            
-        if rodada > 1 and player_turn == False:
-
-
-            #fazer uma função recursiva para detectar jogadas vitoriosas
-
-
-            while True:
-                a = randint(0,2)
-                b = randint(0,2)
-                if matrix[a][b] == 0:
-                    select(a,b,2)
-                    break
-                else: continue
-                
+        ai_turn()
 
 
 def main():

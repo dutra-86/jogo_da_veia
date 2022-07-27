@@ -1,0 +1,6 @@
+def dus():
+    for i in range (10):
+        print(i)
+        if i==5: return 7
+
+dus()
