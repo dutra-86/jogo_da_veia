@@ -1,11 +1,12 @@
+from numpy import diff
 import pygame
 from random import randint
 pygame.init()
 
 window_h=600
-window_w=600
-rodada = 0
+window_w=650
 player_turn = True
+dif = ''
 
 win = pygame.display.set_mode((window_h,window_w))
 pygame.display.set_caption("Jogo da velha")
@@ -38,7 +39,6 @@ def pop_up_unavailable():
 
 def won(winner,s1,s2):
     global matrix
-    global rodada
     pont = True
     while pont:
 
@@ -61,12 +61,10 @@ def won(winner,s1,s2):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pont = False
                 matrix=[[0,0,0],[0,0,0],[0,0,0]]
-                rodada = 0
             if event.type == pygame.QUIT:pygame.quit()
 
 def tie_f():
     global matrix
-    global rodada
     pont = True
     while pont:
         pygame.draw.rect(win, "purple", (125,257,350,30))
@@ -79,7 +77,6 @@ def tie_f():
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 matrix=[[0,0,0],[0,0,0],[0,0,0]]
-                rodada = 0
                 pont = False
             if event.type == pygame.QUIT:pygame.quit() 
 
@@ -106,13 +103,11 @@ def detect_winner():
         tie_f()
 
 def select(a,b,player):
-    global rodada
     global player_turn
 
     #player [1] = user, player [2] = cpu
     if matrix[a][b] == 0:
         matrix[a][b] = player
-        rodada += 1
         player_turn = not player_turn
 
     else:
@@ -124,6 +119,25 @@ def game_screen():
     pygame.draw.line(win,(200,100,0),(400,0),(400,600),12)
     pygame.draw.line(win,(200,100,0),(0,200),(600,200),12)
     pygame.draw.line(win,(200,100,0),(0,400),(600,400),12)
+    pygame.draw.rect(win,(21,17,26), pygame.Rect(0,600,600,650))
+    pygame.draw.rect(win,(186,0,0), pygame.Rect(480,600,140,50))
+    pygame.draw.rect(win,(0,106,50), pygame.Rect(0,600,360,50))
+    txt = fonte(20).render("Sair", True, "white")
+    rct = txt.get_rect(center=(540, 625))
+    win.blit(txt, rct)
+    txt = fonte(20).render("Alterar dificuldade", True, "white")
+    rct = txt.get_rect(center=(182, 625))
+    win.blit(txt, rct)
+
+    if dif == 'easy':
+        txt = fonte(20).render("fac", True, "white")
+        rct = txt.get_rect(center=(420, 625))
+        win.blit(txt, rct)
+    if dif == 'hard':
+        txt = fonte(20).render("dif", True, "white")
+        rct = txt.get_rect(center=(420, 625))
+        win.blit(txt, rct)
+
     for i in range (3):
         for j in range (3):
             if matrix[i][j] == 1:
@@ -132,98 +146,114 @@ def game_screen():
                 win.blit(x_image,(i*200,j*200))
     pygame.display.update()
 
-def ai_turn():
+def ai_turn_hard():
     if player_turn == False:
-        #first turn
-        if rodada == 0:
+
+        #detectar possiveis jogadas vitoriosas
+        for i in range (3):
+            for j in range (3):
+                if matrix[i][j] == 2:
+                    if matrix[max_index_2(i+1)][max_index_2(j)] == 2 and matrix[max_index_2(i+2)][max_index_2(j)] == 0:
+                        select(max_index_2(i+2),max_index_2(j),2)
+                        return 0
+                    if matrix[max_index_2(i-1)][max_index_2(j)] == 2 and matrix[max_index_2(i-2)][max_index_2(j)] == 0:
+                        select(max_index_2(i-2),max_index_2(j),2)
+                        return 0
+                    if matrix[max_index_2(i)][max_index_2(j+1)] == 2 and matrix[max_index_2(i)][max_index_2(j+2)] == 0:
+                        select(max_index_2(i),max_index_2(j+2),2)
+                        return 0
+                    if matrix[max_index_2(i)][max_index_2(j-1)] == 2 and matrix[max_index_2(i)][max_index_2(j-2)] == 0:
+                        select(max_index_2(i),max_index_2(j-2),2)
+                        return 0
+
+        if matrix[1][1] == 0 and ((matrix[0][0] == 2 and matrix[2][2] == 2) or (matrix[2][0] == 2 and matrix[0][2] == 2)):
             select(1,1,2)
             return 0
-        if rodada == 1:
-            if matrix[0][0] == 1:
-                select(2,2,2)
-                return 0
-            if matrix[2][2] == 1:
-                select(0,0,2)
-                return 0
-            if matrix[2][0] == 1:
-                select(0,2,2)
-                return 0
-            if matrix[0][2] == 1:
-                select(2,0,2)
-                return 0
-
-            if matrix[1][0] == 1 or matrix[0][1] == 1 or matrix[2][1] == 1 or matrix[1][2] == 1:
-                select(1,1,2)
-                return 0
-
-            if matrix[1][1] == 1:
-                select(randint(0,1)*2,randint(0,1)*2,2)
-                return 0
-            
-        if rodada > 1:
-
-            #detectar possiveis jogadas vitoriosas
-            for i in range (3):
-                for j in range (3):
-                    if matrix[i][j] == 2:
-                        if matrix[max_index_2(i+1)][max_index_2(j)] == 2 and matrix[max_index_2(i+2)][max_index_2(j)] == 0:
-                            select(max_index_2(i+2),max_index_2(j),2)
-                            return 0
-                        if matrix[max_index_2(i-1)][max_index_2(j)] == 2 and matrix[max_index_2(i-2)][max_index_2(j)] == 0:
-                            select(max_index_2(i-2),max_index_2(j),2)
-                            return 0
-                        if matrix[max_index_2(i)][max_index_2(j+1)] == 2 and matrix[max_index_2(i)][max_index_2(j+2)] == 0:
-                            select(max_index_2(i),max_index_2(j+2),2)
-                            return 0
-                        if matrix[max_index_2(i)][max_index_2(j-1)] == 2 and matrix[max_index_2(i)][max_index_2(j-2)] == 0:
-                            select(max_index_2(i),max_index_2(j-2),2)
-                            return 0
-
-            if matrix[1][1] == 0 and ((matrix[0][0] == 2 and matrix[2][2] == 2) or (matrix[2][0] == 2 and matrix[0][2] == 2)):
-                select(1,1,2)
-                return 0
-            for i in range(2):
-                for j in range(2):
-                    if matrix[1][1] == 2 and matrix[2*i][2*j] == 2 and matrix[2-(2*i)][2-(2*j)] == 0:
-                        select(2-(2*i),2-(2*j),2)
-                        return 0
-
-            #impedir vitorias do usuario
-            for i in range (3):
-                for j in range (3):
-                    if matrix[i][j] == 1:
-                        if matrix[max_index_2(i+1)][max_index_2(j)] == 1 and matrix[max_index_2(i+2)][max_index_2(j)] == 0:
-                            select(max_index_2(i+2),max_index_2(j),2)
-                            return 0
-                        if matrix[max_index_2(i-1)][max_index_2(j)] == 1 and matrix[max_index_2(i-2)][max_index_2(j)] == 0:
-                            select(max_index_2(i-2),max_index_2(j),2)
-                            return 0
-                        if matrix[max_index_2(i)][max_index_2(j+1)] == 1 and matrix[max_index_2(i)][max_index_2(j+2)] == 0:
-                            select(max_index_2(i),max_index_2(j+2),2)
-                            return 0
-                        if matrix[max_index_2(i)][max_index_2(j-1)] == 1 and matrix[max_index_2(i)][max_index_2(j-2)] == 0:
-                            select(max_index_2(i),max_index_2(j-2),2)
-                            return 0
-
-            if matrix[1][1] == 0 and ((matrix[0][0] == 1 and matrix[2][2] == 1) or (matrix[2][0] == 1 and matrix[0][2] == 1)):
-                select(1,1,2)
-                return 0
-            for i in range(2):
-                for j in range(2):
-                    if matrix[1][1] == 1 and matrix[2*i][2*j] == 1 and matrix[2-(2*i)][2-(2*j)] == 0:
-                        select(2-(2*i),2-(2*j),2)
-                        return 0
-
-            #caso nenhuma das funcoes acima retorne uma possivel jogada, a ia joga aleatoriamente
-            while True:
-                a = randint(0,2)
-                b = randint(0,2)
-                if matrix[a][b] == 0:
-                    select(a,b,2)
+        for i in range(2):
+            for j in range(2):
+                if matrix[1][1] == 2 and matrix[2*i][2*j] == 2 and matrix[2-(2*i)][2-(2*j)] == 0:
+                    select(2-(2*i),2-(2*j),2)
                     return 0
 
-def game():
-    global rodada
+        #impedir vitorias do usuario
+        for i in range (3):
+            for j in range (3):
+                if matrix[i][j] == 1:
+                    if matrix[max_index_2(i+1)][max_index_2(j)] == 1 and matrix[max_index_2(i+2)][max_index_2(j)] == 0:
+                        select(max_index_2(i+2),max_index_2(j),2)
+                        return 0
+                    if matrix[max_index_2(i-1)][max_index_2(j)] == 1 and matrix[max_index_2(i-2)][max_index_2(j)] == 0:
+                        select(max_index_2(i-2),max_index_2(j),2)
+                        return 0
+                    if matrix[max_index_2(i)][max_index_2(j+1)] == 1 and matrix[max_index_2(i)][max_index_2(j+2)] == 0:
+                        select(max_index_2(i),max_index_2(j+2),2)
+                        return 0
+                    if matrix[max_index_2(i)][max_index_2(j-1)] == 1 and matrix[max_index_2(i)][max_index_2(j-2)] == 0:
+                        select(max_index_2(i),max_index_2(j-2),2)
+                        return 0
+
+        if matrix[1][1] == 0 and ((matrix[0][0] == 1 and matrix[2][2] == 1) or (matrix[2][0] == 1 and matrix[0][2] == 1)):
+            select(1,1,2)
+            return 0
+        for i in range(2):
+            for j in range(2):
+                if matrix[1][1] == 1 and matrix[2*i][2*j] == 1 and matrix[2-(2*i)][2-(2*j)] == 0:
+                    select(2-(2*i),2-(2*j),2)
+                    return 0
+
+        #caso nenhuma das funcoes acima retorne uma possivel jogada:
+
+        if ((matrix[0][0] == 1 and matrix[2][2] == 1) or (matrix[2][0] == 1 and matrix[0][2] == 1)) and matrix[1][1] == 2:
+            if matrix[0][1] == 0:
+                select(0,1,2)
+                return 0
+            if matrix[1][0] == 0:
+                select(1,0,2)
+                return 0
+            if matrix[2][1] == 0:
+                select(2,1,2)
+                return 0
+            if matrix[1][2] == 0:
+                select(1,2,2)
+                return 0
+
+        if matrix[1][1] == 1:  
+            for i in range(2):
+                for j in range(2):
+                    if matrix[2*i][2*j] == 0:
+                        select(2*i,2*j,2)
+                        return 0
+
+        for i in range(2):
+            for j in range(2):
+                if matrix[2*i][2*j] == 1 and matrix[1][1] == 0:
+                    select(1,1,2)
+                    return 0
+                   
+
+        for i in range(2):
+            for j in range(2):
+                if matrix[2*i][2*j] == 0:
+                    select(2*i,2*j,2)
+                    return 0
+
+        while True:
+            a = randint(0,2)
+            b = randint(0,2)
+            if matrix[a][b] == 0:
+                select(a,b,2)
+                return 0
+
+def ai_turn_easy():
+    if player_turn == False:
+        while True:
+            a = randint(0,2)
+            b = randint(0,2)
+            if matrix[a][b] == 0:
+                select(a,b,2)
+                return 0
+
+def game(difficulty):
     global player_turn
     while True:
         pygame.time.delay(50)
@@ -231,7 +261,12 @@ def game():
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if player_turn == True:
+                if int(event.pos[1]//200) > 2:
+                    if int(event.pos[0]//200) == 2:
+                        pygame.quit()
+                    else:
+                        return 0
+                elif player_turn == True:
                     selected_x = int(event.pos[0]//200)
                     selected_y = int(event.pos[1]//200)
                     select(selected_x,selected_y,1)
@@ -241,7 +276,51 @@ def game():
 
         game_screen()
         detect_winner()
-        ai_turn()
+        if difficulty == 'easy':
+            ai_turn_easy()
+        if difficulty == 'hard':
+            ai_turn_hard()
+
+def set_difficulty():
+    global dif
+    while True:
+        win.fill((30,30,50))
+        pygame.time.delay(50)
+
+        pygame.draw.rect(win,(10,10,10), pygame.Rect(30,300,160,100))
+        pygame.draw.rect(win,(10,10,10), pygame.Rect(220,300,160,100))
+        pygame.draw.rect(win,(10,10,10), pygame.Rect(410,300,160,100))
+        txt = fonte(20).render("Escolha a dificuldade", True, "white")
+        rct = txt.get_rect(center=(300, 180))
+        win.blit(txt,rct)
+
+        txt = fonte(20).render("facil", True, "white")
+        rct = txt.get_rect(center=(110, 350))
+        win.blit(txt,rct)
+
+        txt = fonte(20).render("medio", True, "white")
+        rct = txt.get_rect(center=(300, 350))
+        win.blit(txt,rct)
+
+        txt = fonte(12).render("(em breve)", True, "white")
+        rct = txt.get_rect(center=(300, 375))
+        win.blit(txt,rct)
+
+        txt = fonte(20).render("dificil", True, "white")
+        rct = txt.get_rect(center=(490, 350))
+        win.blit(txt,rct)
+
+
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if int(event.pos[0]//200) == 2:
+                    dif = 'hard'
+                    return 0
+                if int(event.pos[0]//200) == 0:
+                    dif = 'easy'
+                    return 0
+            if event.type == pygame.QUIT:pygame.quit()
 
 
 def main():
@@ -263,8 +342,10 @@ def main():
 
 
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN: game()
+            if event.type == pygame.MOUSEBUTTONDOWN: return 0
             if event.type == pygame.QUIT:pygame.quit()
 
 main()
-pygame.quit()
+while True:
+    set_difficulty()
+    game(dif)
